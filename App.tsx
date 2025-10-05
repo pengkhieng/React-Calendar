@@ -11,6 +11,7 @@ import {
   SafeAreaProvider,
   useSafeAreaInsets,
 } from 'react-native-safe-area-context';
+import CalendarScreen from './app/CalendarScreen';
 
 function App() {
   const isDarkMode = useColorScheme() === 'dark';
@@ -18,7 +19,9 @@ function App() {
   return (
     <SafeAreaProvider>
       <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} />
-      <AppContent />
+      <View style={{flex: 1, paddingTop: 40 }}>
+      <CalendarScreen />
+      </View>
     </SafeAreaProvider>
   );
 }
