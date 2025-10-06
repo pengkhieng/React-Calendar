@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Dimensions,
   ScrollView,
@@ -10,7 +10,6 @@ import {
 
 const { width } = Dimensions.get("window");
 
-// Set to October 2025
 const TODAY = new Date();
 
 // Sample events for October 2025
@@ -19,8 +18,8 @@ const sampleEvents = [
     id: 1,
     title: "Philosophy",
     description: "Video call link: https://meet.google.com/ich-hjrb-rpq",
-    start: `2025-10-06 08:00`,
-    end: `2025-10-06 09:30`,
+    start: `2025-10-06 13:00`,
+    end: `2025-10-06 14:30`,
     color: "#0092fb3d",
   },
   {
@@ -39,37 +38,22 @@ const sampleEvents = [
     color: "#ff4d0043",
     isEvent: true,
   },
-  // {
-  //   id: 9,
-  //   title: "AI",
-  //   start: `2025-10-07 13:00`,
-  //   end: `2025-10-07 14:59`,
-  //   color: "#00ff2243",
-  //   isEvent: true,
-  // },
-  // {
-  //   id: 10,
-  //   title: "UX|UI",
-  //   start: `2025-10-07 15:00`,
-  //   end: `2025-10-07 17:59`,
-  //   color: "#00c8ff43",
-  //   isEvent: true,
-  // },
-  // ... other events
 ];
 
 const CalendarApp = () => {
   const [currentDate, setCurrentDate] = useState(TODAY);
   const [view, setView] = useState<"day" | "week" | "month">("week");
   const [showViewMenu, setShowViewMenu] = useState(false);
+  const [currentTime, setCurrentTime] = useState(new Date());
+
+  useEffect(() => {
+    const timer = setInterval(() => setCurrentTime(new Date()), 1000); // Update every second
+    return () => clearInterval(timer);
+  }, []);
 
   const hours = Array.from({ length: 19 }, (_, i) => 5 + i); // 5AM - 11PM
 
-  // -------------------------------
-  // Utility functions
-  // -------------------------------
-
-  // Get all days of the current month
+  // Utility functions remain the same as in the original code
   const getDaysInMonth = (date: Date): (Date | null)[] => {
     const year = date.getFullYear();
     const month = date.getMonth();
@@ -84,7 +68,6 @@ const CalendarApp = () => {
     return days;
   };
 
-  // Get the 7 days of the week for a given date
   const getWeekDays = (date: Date): Date[] => {
     const dayOfWeek = date.getDay();
     const sunday = new Date(date);
@@ -97,28 +80,25 @@ const CalendarApp = () => {
     });
   };
 
-  // Format a date as YYYY-MM-DD
   const formatDate = (date: Date) =>
     `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(
       2,
       "0"
     )}-${String(date.getDate()).padStart(2, "0")}`;
 
-  // Get events for a specific date
   const getEventsForDate = (date: Date) =>
     sampleEvents.filter(
       (event) => event.start.split(" ")[0] === formatDate(date)
     );
 
-  // Get position of an event in the day/week grid
   const getEventPosition = (event: any) => {
     const [, startTime] = event.start.split(" ");
     const [startHour, startMin] = startTime.split(":").map(Number);
-    const startMinutes = (startHour - 6) * 60 + startMin;
+    const startMinutes = (startHour - 5) * 60 + startMin;
 
     const [, endTime] = event.end.split(" ");
     const [endHour, endMin] = endTime.split(":").map(Number);
-    const endMinutes = (endHour - 6) * 60 + endMin;
+    const endMinutes = (endHour - 5) * 60 + endMin;
 
     const duration = endMinutes - startMinutes;
     return {
@@ -127,7 +107,6 @@ const CalendarApp = () => {
     };
   };
 
-  // Navigation
   const goToToday = () => setCurrentDate(TODAY);
   const changeDate = (direction: number) => {
     const newDate = new Date(currentDate);
@@ -138,7 +117,6 @@ const CalendarApp = () => {
     setCurrentDate(newDate);
   };
 
-  // Display text for header
   const getDisplayText = () => {
     if (view === "day") return currentDate.toDateString();
 
@@ -147,7 +125,6 @@ const CalendarApp = () => {
       const firstDay = weekDays[0];
       const lastDay = weekDays[6];
 
-      // Check if the week spans two months
       if (firstDay.getMonth() !== lastDay.getMonth()) {
         const firstMonth = firstDay.toLocaleString("default", {
           month: "long",
@@ -155,7 +132,7 @@ const CalendarApp = () => {
         const secondMonth = lastDay.toLocaleString("default", {
           month: "long",
         });
-        const year = firstDay.getFullYear(); // Assuming the week is within the same year
+        const year = firstDay.getFullYear();
         return `${firstMonth} - ${secondMonth} ${year}`;
       } else {
         return currentDate.toLocaleString("default", {
@@ -173,17 +150,12 @@ const CalendarApp = () => {
     return "";
   };
 
-  // ========================================
-  // =============== MONTH VIEW =============
-  // ========================================
-
   const renderMonthView = () => {
     const days = getDaysInMonth(currentDate);
     const weekDays = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
     return (
       <View style={styles.monthContainer}>
-        {/* Weekday header */}
         <View style={styles.weekDaysHeader}>
           {weekDays.map((day, i) => (
             <View key={i} style={styles.weekDayCell}>
@@ -191,8 +163,6 @@ const CalendarApp = () => {
             </View>
           ))}
         </View>
-
-        {/* Month grid */}
         <View style={styles.monthGrid}>
           {days.map((day, i) => {
             const events = day
@@ -241,22 +211,24 @@ const CalendarApp = () => {
     );
   };
 
-  // ========================================
-  // ================ WEEK VIEW =============
-  // ========================================
-
   const renderWeekView = () => {
     const weekDays = getWeekDays(currentDate);
     const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
+    const getTimeTrackPosition = () => {
+      if (formatDate(currentTime) !== formatDate(currentDate)) return -60;
+      const hour = currentTime.getHours();
+      const minute = currentTime.getMinutes();
+      const totalMinutes = (hour - 5) * 60 + minute; // Offset from 5 AM
+      return (totalMinutes / 60) * 60; // Convert to pixels (60px per hour)
+    };
+
     return (
       <View style={styles.weekContainer}>
-        {/* All-day events section */}
         <View style={styles.allDaySection}>
           {weekDays.map((day, i) => {
             const events = getEventsForDate(day).filter((e) => e.isEvent);
             const isToday = formatDate(day) === formatDate(TODAY);
-
             return (
               <TouchableOpacity
                 key={i}
@@ -301,8 +273,6 @@ const CalendarApp = () => {
             );
           })}
         </View>
-
-        {/* Timed events */}
         <ScrollView style={styles.timeGridScroll}>
           <View style={styles.timeGrid}>
             <View style={styles.timeColumn}>
@@ -314,11 +284,9 @@ const CalendarApp = () => {
                 </View>
               ))}
             </View>
-
             <View style={styles.daysGrid}>
               {weekDays.map((day, i) => {
                 const events = getEventsForDate(day).filter((e) => !e.isEvent);
-
                 return (
                   <TouchableOpacity
                     key={i}
@@ -357,19 +325,31 @@ const CalendarApp = () => {
                         </TouchableOpacity>
                       );
                     })}
+                    <View style={styles.fullDayLine}>
+                      <View style={styles.timeTrackLine} />
+                    </View>
                   </TouchableOpacity>
                 );
               })}
             </View>
+
+            {formatDate(currentDate) === formatDate(TODAY) && (
+              <View style={[styles.timeTrack, { top: getTimeTrackPosition() }]}>
+                <Text style={styles.timeTrackText}>
+                  {currentTime.toLocaleTimeString([], {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                    hour12: false,
+                  })}
+                </Text>
+                <View style={styles.timeTrackLine} />
+              </View>
+            )}
           </View>
         </ScrollView>
       </View>
     );
   };
-
-  // ========================================
-  // ================ DAY VIEW ==============
-  // ========================================
 
   const renderDayView = () => {
     const events = getEventsForDate(currentDate);
@@ -378,14 +358,20 @@ const CalendarApp = () => {
     const weekDays = getWeekDays(currentDate);
     const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
+    const getTimeTrackPosition = () => {
+      if (formatDate(currentTime) !== formatDate(currentDate)) return -60;
+      const hour = currentTime.getHours();
+      const minute = currentTime.getMinutes();
+      const totalMinutes = (hour - 5) * 60 + minute; // Offset from 5 AM
+      return (totalMinutes / 60) * 60; // ~438px at 12:03 PM
+    };
+
     return (
       <View style={styles.dayContainer}>
-        {/* Week day headers */}
         <View style={styles.dayWeekHeader}>
           {weekDays.map((day, i) => {
             const isToday = formatDate(day) === formatDate(TODAY);
             const isSelected = formatDate(day) === formatDate(currentDate);
-
             return (
               <TouchableOpacity
                 key={i}
@@ -414,8 +400,6 @@ const CalendarApp = () => {
             );
           })}
         </View>
-
-        {/* All-day events */}
         {allDayEvents.length > 0 && (
           <View style={styles.eventSection}>
             {allDayEvents.map((event, idx) => (
@@ -431,8 +415,6 @@ const CalendarApp = () => {
             ))}
           </View>
         )}
-
-        {/* Timed events */}
         <ScrollView style={styles.dayTimeScroll}>
           <View style={styles.dayTimeGrid}>
             <View style={styles.timeColumn}>
@@ -444,7 +426,6 @@ const CalendarApp = () => {
                 </View>
               ))}
             </View>
-
             <View style={styles.dayEventsColumn}>
               {hours.map((_, idx) => (
                 <View key={idx} style={styles.hourCell} />
@@ -473,29 +454,32 @@ const CalendarApp = () => {
                 );
               })}
             </View>
+            {formatDate(currentDate) === formatDate(TODAY) && (
+              <View style={[styles.timeTrack, { top: getTimeTrackPosition() }]}>
+                <Text style={styles.timeTrackText}>
+                  {currentTime.toLocaleTimeString([], {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                    hour12: false,
+                  })}
+                </Text>
+                <View style={styles.timeTrackLine} />
+              </View>
+            )}
           </View>
         </ScrollView>
       </View>
     );
   };
-
-  // ========================================
-  // ================ RENDER =================
-  // ========================================
-
   return (
     <View style={styles.container}>
-      {/* Header */}
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Calendar</Text>
       </View>
-
-      {/* Controls: Today, Navigation, View */}
       <View style={styles.controls}>
         <TouchableOpacity style={styles.todayButton} onPress={goToToday}>
           <Text style={styles.todayButtonText}>Today</Text>
         </TouchableOpacity>
-
         <View style={styles.navigation}>
           <TouchableOpacity onPress={() => changeDate(-1)}>
             <Text style={styles.navArrow}>‹</Text>
@@ -505,8 +489,6 @@ const CalendarApp = () => {
             <Text style={styles.navArrow}>›</Text>
           </TouchableOpacity>
         </View>
-
-        {/* View selection */}
         <View>
           <TouchableOpacity
             style={styles.viewButton}
@@ -536,8 +518,6 @@ const CalendarApp = () => {
           )}
         </View>
       </View>
-
-      {/* Render views */}
       {view === "month" && renderMonthView()}
       {view === "week" && renderWeekView()}
       {view === "day" && renderDayView()}
@@ -546,11 +526,7 @@ const CalendarApp = () => {
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#ffffff",
-    width: "100%",
-  },
+  container: { flex: 1, backgroundColor: "#ffffff", width: "100%" },
   header: {
     backgroundColor: "#FFF",
     padding: 16,
@@ -558,11 +534,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: "#E0E0E0",
   },
-  headerTitle: {
-    fontSize: 20,
-    fontWeight: "bold",
-    color: "#333",
-  },
+  headerTitle: { fontSize: 20, fontWeight: "bold", color: "#333" },
   controls: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -577,19 +549,9 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "#DDD",
   },
-  todayButtonText: {
-    fontSize: 14,
-    color: "#333",
-  },
-  navigation: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 16,
-  },
-  navArrow: {
-    fontSize: 24,
-    color: "#666",
-  },
+  todayButtonText: { fontSize: 14, color: "#333" },
+  navigation: { flexDirection: "row", alignItems: "center", gap: 16 },
+  navArrow: { fontSize: 24, color: "#666" },
   dateDisplay: {
     fontSize: 16,
     fontWeight: "600",
@@ -603,10 +565,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "#DDD",
   },
-  viewButtonText: {
-    fontSize: 14,
-    color: "#333",
-  },
+  viewButtonText: { fontSize: 14, color: "#333" },
   viewMenu: {
     position: "absolute",
     top: 40,
@@ -628,33 +587,17 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: "#F0F0F0",
   },
-  viewMenuText: {
-    fontSize: 14,
-    color: "#333",
-  },
-  // ============== MONTH ==============
-  monthContainer: {
-    flex: 1,
-    backgroundColor: "#FFF",
-  },
-  weekDaysHeader: {
-    flexDirection: "row",
-  },
+  viewMenuText: { fontSize: 14, color: "#333" },
+  monthContainer: { flex: 1, backgroundColor: "#FFF" },
+  weekDaysHeader: { flexDirection: "row" },
   weekDayCell: {
     flex: 1,
     padding: 8,
     alignItems: "center",
     backgroundColor: "#FFF",
   },
-  weekDayText: {
-    fontSize: 12,
-    color: "#666",
-    fontWeight: "600",
-  },
-  monthGrid: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-  },
+  weekDayText: { fontSize: 12, color: "#666", fontWeight: "600" },
+  monthGrid: { flexDirection: "row", flexWrap: "wrap" },
   monthDayCell: {
     width: width / 7,
     height: 80,
@@ -671,20 +614,12 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
-  todayNumber: {
-    backgroundColor: "#FF6B35",
-  },
-  dayNumberText: {
-    fontSize: 12,
-    color: "#333",
-  },
-  todayNumberText: {
-    color: "#FFF",
-    fontWeight: "bold",
-  },
+  todayNumber: { backgroundColor: "#FF6B35" },
+  dayNumberText: { fontSize: 12, color: "#333" },
+  todayNumberText: { color: "#FFF", fontWeight: "bold" },
   monthEventTagsHorizontal: {
-    flexDirection: "row", // horizontal layout
-    flexWrap: "wrap", // wrap if too many dots
+    flexDirection: "row",
+    flexWrap: "wrap",
     marginTop: 4,
     justifyContent: "flex-start",
     alignItems: "center",
@@ -692,44 +627,20 @@ const styles = StyleSheet.create({
   monthEventDot: {
     width: 8,
     height: 8,
-    borderRadius: 4, // makes it circular
-    marginRight: 2, // horizontal spacing between dots
-    marginBottom: 2, // spacing for wrap
-  },
-
-  monthEventTag: {
-    paddingHorizontal: 4,
-    paddingVertical: 2,
     borderRadius: 4,
-    marginVertical: 1,
+    marginRight: 2,
+    marginBottom: 2,
   },
-  monthEventText: {
-    fontSize: 10,
-    color: "#333",
-  },
-
-  // ============== DAY ==============
-  weekContainer: {
-    flex: 1,
-  },
+  weekContainer: { flex: 1 },
   allDaySection: {
     flexDirection: "row",
     borderBottomWidth: 0.2,
     borderBottomColor: "#E0E0E0",
     paddingLeft: 60,
   },
-  allDayCell: {
-    flex: 1,
-    padding: 4,
-  },
-  weekDayHeader: {
-    alignItems: "center",
-    marginBottom: 4,
-  },
-  weekDayLabel: {
-    fontSize: 12,
-    color: "#666",
-  },
+  allDayCell: { flex: 1, padding: 4 },
+  weekDayHeader: { alignItems: "center", marginBottom: 4 },
+  weekDayLabel: { fontSize: 12, color: "#666" },
   weekDayNumber: {
     width: 32,
     height: 32,
@@ -738,45 +649,21 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginTop: 4,
   },
-
-  // ============== DAY ==============
-  todayCircle: {
-    backgroundColor: "#FF6B35",
-  },
-  selectedDayCircle: {
-    backgroundColor: "#2196F3",
-  },
-  weekDayNumberText: {
-    fontSize: 14,
-    color: "#333",
-  },
-  todayText: {
-    color: "#FFF",
-    fontWeight: "bold",
-  },
-  selectedDayText: {
-    color: "#FFF",
-    fontWeight: "bold",
-  },
+  todayCircle: { backgroundColor: "#FF6B35" },
+  selectedDayCircle: { backgroundColor: "#2196F3" },
+  weekDayNumberText: { fontSize: 14, color: "#333" },
+  todayText: { color: "#FFF", fontWeight: "bold" },
+  selectedDayText: { color: "#FFF", fontWeight: "bold" },
   allDayEvent: {
     paddingHorizontal: 4,
     paddingVertical: 2,
     borderRadius: 4,
     marginVertical: 2,
   },
-  allDayEventText: {
-    fontSize: 10,
-    color: "#333",
-  },
-  timeGridScroll: {
-    flex: 1,
-  },
-  timeGrid: {
-    flexDirection: "row",
-  },
-  timeColumn: {
-    width: 60,
-  },
+  allDayEventText: { fontSize: 10, color: "#333" },
+  timeGridScroll: { flex: 1 },
+  timeGrid: { flexDirection: "row" },
+  timeColumn: { width: 60 },
   timeSlot: {
     height: 60,
     justifyContent: "center",
@@ -787,25 +674,15 @@ const styles = StyleSheet.create({
     borderRightColor: "#E0E0E0",
     borderTopColor: "#E0E0E0",
   },
-  timeText: {
-    fontSize: 11,
-    color: "#666",
-  },
-  daysGrid: {
-    flex: 1,
-    flexDirection: "row",
-  },
+  timeText: { fontSize: 11, color: "#666" },
+  daysGrid: { flex: 1, flexDirection: "row" },
   dayColumn: {
     flex: 1,
     position: "relative",
     borderRightWidth: 1,
     borderRightColor: "#E0E0E0",
   },
-  hourCell: {
-    height: 60,
-    borderTopWidth: 0.5,
-    borderTopColor: "#E0E0E0",
-  },
+  hourCell: { height: 60, borderTopWidth: 0.5, borderTopColor: "#E0E0E0" },
   event: {
     position: "absolute",
     left: 2,
@@ -815,37 +692,17 @@ const styles = StyleSheet.create({
     borderLeftWidth: 3,
     borderLeftColor: "#2196F3",
   },
-  eventTitle: {
-    fontSize: 12,
-    fontWeight: "600",
-    color: "#1976D2",
-  },
-  eventDescription: {
-    fontSize: 10,
-    color: "#666",
-    marginTop: 2,
-  },
-  dayContainer: {
-    flex: 1,
-    backgroundColor: "#FFF",
-  },
+  eventTitle: { fontSize: 12, fontWeight: "600", color: "#1976D2" },
+  eventDescription: { fontSize: 10, color: "#666", marginTop: 2 },
+  dayContainer: { flex: 1, backgroundColor: "#FFF" },
   dayWeekHeader: {
     flexDirection: "row",
-    // borderBottomWidth: 1,
-    // borderBottomColor: "#E0E0E0",
     paddingVertical: 8,
     backgroundColor: "#FFF",
     paddingLeft: 60,
   },
-  dayHeaderCell: {
-    flex: 1,
-    alignItems: "center",
-  },
-  dayHeaderLabel: {
-    fontSize: 12,
-    color: "#666",
-    fontWeight: "500",
-  },
+  dayHeaderCell: { flex: 1, alignItems: "center" },
+  dayHeaderLabel: { fontSize: 12, color: "#666", fontWeight: "500" },
   dayHeaderNumber: {
     width: 32,
     height: 32,
@@ -854,10 +711,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginTop: 4,
   },
-  dayHeaderNumberText: {
-    fontSize: 14,
-    color: "#333",
-  },
+  dayHeaderNumberText: { fontSize: 14, color: "#333" },
   eventSection: {
     padding: 8,
     borderBottomWidth: 0.2,
@@ -869,22 +723,14 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     marginVertical: 4,
   },
-  dayAllDayEventText: {
-    fontSize: 14,
-    color: "#333",
-  },
-  dayTimeScroll: {
-    flex: 1,
-  },
+  dayAllDayEventText: { fontSize: 14, color: "#333" },
+  dayTimeScroll: { flex: 1 },
   dayTimeGrid: {
     flexDirection: "row",
     borderBottomWidth: 0.5,
     borderBottomColor: "#e0e0e0",
   },
-  dayEventsColumn: {
-    flex: 1,
-    position: "relative",
-  },
+  dayEventsColumn: { flex: 1, position: "relative" },
   dayEvent: {
     position: "absolute",
     left: 8,
@@ -893,6 +739,37 @@ const styles = StyleSheet.create({
     padding: 8,
     borderLeftWidth: 4,
     borderLeftColor: "#2196F3",
+  },
+  fullDayLine: {
+    position: "absolute",
+    left: 2,
+    right: 2,
+    top: 0,
+    bottom: 0,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  timeTrack: {
+    position: "absolute",
+    left: 8,
+    right: 8,
+    flexDirection: "row",
+    alignItems: "flex-start",
+  },
+  timeTrackLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: "#ff5f5fff",
+  },
+  timeTrackText: {
+    top: -10,
+    fontSize: 12,
+    color: "#ffffff",
+    marginLeft: 4,
+    backgroundColor: "#ff5454ff",
+    paddingHorizontal: 4,
+    paddingVertical: 2,
+    borderRadius: 12,
   },
 });
 
