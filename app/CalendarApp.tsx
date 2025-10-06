@@ -12,7 +12,6 @@ const { width } = Dimensions.get("window");
 
 const TODAY = new Date();
 
-// Sample events for October 2025
 const sampleEvents = [
   {
     id: 1,
@@ -27,16 +26,56 @@ const sampleEvents = [
     title: "Create your first Website",
     start: `2025-10-06 00:00`,
     end: `2025-10-06 23:59`,
-    color: "#ff002637",
+    color: "#ff0026a7",
     isEvent: true,
   },
   {
     id: 8,
     title: "Robotics",
-    start: `2025-10-07 00:00`,
-    end: `2025-10-07 23:59`,
-    color: "#ff4d0043",
+    start: `2025-10-07 11:00`,
+    end: `2025-10-07 12:59`,
+    color: "#ff4d0098",
     isEvent: true,
+  },
+  {
+    id: 9,
+    title: "UI",
+    description: "Video call link: https://meet.google.com/ich-hjrb-rpq",
+    start: `2025-10-10 11:00`,
+    end: `2025-10-10 12:30`,
+    color: "#da8045ff",
+  },
+  {
+    id: 10,
+    title: "UX",
+    description: "Video",
+    start: `2025-10-10 11:00`,
+    end: `2025-10-10 12:30`,
+    color: "#a5a4d4ff",
+  },
+  {
+    id: 11,
+    title: "Mobile",
+    start: `2025-10-07 11:00`,
+    end: `2025-10-07 12:59`,
+    color: "#5b81bf98",
+    isEvent: true,
+  },
+  {
+    id: 12,
+    title: "AU",
+    description: "Video",
+    start: `2025-10-10 11:00`,
+    end: `2025-10-10 12:30`,
+    color: "#d4a4a4ff",
+  },
+  {
+    id: 13,
+    title: "EE",
+    description: "Video",
+    start: `2025-10-10 11:00`,
+    end: `2025-10-10 12:30`,
+    color: "#a4d4acff",
   },
 ];
 
@@ -156,6 +195,7 @@ const CalendarApp = () => {
 
     return (
       <View style={styles.monthContainer}>
+        {/* Week header */}
         <View style={styles.weekDaysHeader}>
           {weekDays.map((day, i) => (
             <View key={i} style={styles.weekDayCell}>
@@ -163,33 +203,43 @@ const CalendarApp = () => {
             </View>
           ))}
         </View>
+
+        {/* Month grid */}
         <View style={styles.monthGrid}>
           {days.map((day, i) => {
             const events = day
               ? getEventsForDate(day).filter((e) => e.isEvent)
               : [];
             const isToday = day && formatDate(day) === formatDate(TODAY);
+            const isSelected =
+              day && formatDate(day) === formatDate(currentDate);
 
             return (
               <TouchableOpacity
                 key={i}
                 style={styles.monthDayCell}
-                onPress={() => day && (setCurrentDate(day), setView("day"))}
+                onPress={() => day && setCurrentDate(day)}
               >
                 {day && (
                   <>
                     <View
-                      style={[styles.dayNumber, isToday && styles.todayNumber]}
+                      style={[
+                        styles.dayNumber,
+                        isToday && styles.todayNumber,
+                        isSelected && styles.selectedDayCircle,
+                      ]}
                     >
                       <Text
                         style={[
                           styles.dayNumberText,
                           isToday && styles.todayNumberText,
+                          isSelected && styles.selectedDayText,
                         ]}
                       >
                         {day.getDate()}
                       </Text>
                     </View>
+                    {/* Horizontal dots */}
                     <View style={styles.monthEventTagsHorizontal}>
                       {events.map((event, idx) => (
                         <View
@@ -219,24 +269,24 @@ const CalendarApp = () => {
       if (formatDate(currentTime) !== formatDate(currentDate)) return -60;
       const hour = currentTime.getHours();
       const minute = currentTime.getMinutes();
-      const totalMinutes = (hour - 5) * 60 + minute; // Offset from 5 AM
-      return (totalMinutes / 60) * 60; // Convert to pixels (60px per hour)
+      const totalMinutes = (hour - 5) * 60 + minute;
+      return (totalMinutes / 60) * 60;
     };
 
     return (
       <View style={styles.weekContainer}>
+        {/* All-day section */}
         <View style={styles.allDaySection}>
           {weekDays.map((day, i) => {
             const events = getEventsForDate(day).filter((e) => e.isEvent);
             const isToday = formatDate(day) === formatDate(TODAY);
+            const isSelected = formatDate(day) === formatDate(currentDate);
+
             return (
               <TouchableOpacity
                 key={i}
                 style={styles.allDayCell}
-                onPress={() => {
-                  setCurrentDate(day);
-                  setView("day");
-                }}
+                onPress={() => setCurrentDate(day)}
               >
                 <View style={styles.weekDayHeader}>
                   <Text style={styles.weekDayLabel}>{dayNames[i]}</Text>
@@ -244,27 +294,37 @@ const CalendarApp = () => {
                     style={[
                       styles.weekDayNumber,
                       isToday && styles.todayCircle,
+                      isSelected && styles.selectedDayCircle,
                     ]}
                   >
                     <Text
                       style={[
                         styles.weekDayNumberText,
                         isToday && styles.todayText,
+                        isSelected && styles.selectedDayText,
                       ]}
                     >
                       {day.getDate()}
                     </Text>
                   </View>
                 </View>
+
+                {/* Horizontal event bar */}
                 {events.map((event, idx) => (
                   <View
                     key={idx}
-                    style={[
-                      styles.allDayEvent,
-                      { backgroundColor: event.color },
-                    ]}
+                    style={{
+                      backgroundColor: event.color,
+                      borderRadius: 12,
+                      padding: 3,
+                      marginVertical: 1,
+                    }}
                   >
-                    <Text style={styles.allDayEventText} numberOfLines={1}>
+                    <Text
+                      style={{ color: "#fff", fontSize: 12 }}
+                      numberOfLines={1}
+                      ellipsizeMode="tail"
+                    >
                       {event.title}
                     </Text>
                   </View>
@@ -273,6 +333,8 @@ const CalendarApp = () => {
             );
           })}
         </View>
+
+        {/* Time grid */}
         <ScrollView style={styles.timeGridScroll}>
           <View style={styles.timeGrid}>
             <View style={styles.timeColumn}>
@@ -284,18 +346,13 @@ const CalendarApp = () => {
                 </View>
               ))}
             </View>
-            <View style={styles.daysGrid}>
+
+            {/* Events area */}
+            {/* <View style={styles.daysGrid}>
               {weekDays.map((day, i) => {
                 const events = getEventsForDate(day).filter((e) => !e.isEvent);
                 return (
-                  <TouchableOpacity
-                    key={i}
-                    style={styles.dayColumn}
-                    onPress={() => {
-                      setCurrentDate(day);
-                      setView("day");
-                    }}
-                  >
+                  <View key={i} style={styles.dayColumn}>
                     {hours.map((_, idx) => (
                       <View key={idx} style={styles.hourCell} />
                     ))}
@@ -314,25 +371,79 @@ const CalendarApp = () => {
                           ]}
                         >
                           <Text style={styles.eventTitle}>{event.title}</Text>
-                          {event.description && (
-                            <Text
-                              style={styles.eventDescription}
-                              numberOfLines={2}
-                            >
-                              {event.description}
-                            </Text>
-                          )}
                         </TouchableOpacity>
                       );
                     })}
-                    <View style={styles.fullDayLine}>
-                      <View style={styles.timeTrackLine} />
-                    </View>
-                  </TouchableOpacity>
+                  </View>
+                );
+              })}
+            </View> */}
+
+            <View style={styles.daysGrid}>
+              {weekDays.map((day, i) => {
+                const events = getEventsForDate(day).filter((e) => !e.isEvent);
+
+                // Determine overlapping events per day
+                const eventColumns: any[][] = [];
+                events.forEach((event) => {
+                  const pos = getEventPosition(event);
+                  let placed = false;
+                  for (let col of eventColumns) {
+                    if (
+                      !col.some((e) => {
+                        const ePos = getEventPosition(e);
+                        return !(
+                          pos.top + pos.height <= ePos.top ||
+                          pos.top >= ePos.top + ePos.height
+                        );
+                      })
+                    ) {
+                      col.push(event);
+                      placed = true;
+                      break;
+                    }
+                  }
+                  if (!placed) eventColumns.push([event]);
+                });
+
+                return (
+                  <View key={i} style={styles.dayColumn}>
+                    {hours.map((_, idx) => (
+                      <View key={idx} style={styles.hourCell} />
+                    ))}
+
+                    {/* Render events with column splitting */}
+                    {eventColumns.map((col, colIndex) =>
+                      col.map((event, idx) => {
+                        const pos = getEventPosition(event);
+                        const widthPercent = 100 / eventColumns.length; // divide width among columns
+                        return (
+                          <TouchableOpacity
+                            key={idx}
+                            style={[
+                              styles.event,
+                              {
+                                top: pos.top,
+                                height: pos.height,
+                                left: `${colIndex * widthPercent}%`,
+                                width: `${widthPercent}%`,
+                                backgroundColor: event.color,
+                              },
+                            ]}
+                          >
+                            <Text style={styles.eventTitle} numberOfLines={1}>
+                              {event.title}
+                            </Text>
+                          </TouchableOpacity>
+                        );
+                      })
+                    )}
+                  </View>
                 );
               })}
             </View>
 
+            {/* Live time tracker */}
             {formatDate(currentDate) === formatDate(TODAY) && (
               <View style={[styles.timeTrack, { top: getTimeTrackPosition() }]}>
                 <Text style={styles.timeTrackText}>
@@ -426,7 +537,7 @@ const CalendarApp = () => {
                 </View>
               ))}
             </View>
-            <View style={styles.dayEventsColumn}>
+            {/* <View style={styles.dayEventsColumn}>
               {hours.map((_, idx) => (
                 <View key={idx} style={styles.hourCell} />
               ))}
@@ -453,7 +564,75 @@ const CalendarApp = () => {
                   </TouchableOpacity>
                 );
               })}
+            </View> */}
+
+            <View style={styles.dayEventsColumn}>
+              {hours.map((_, idx) => (
+                <View key={idx} style={styles.hourCell} />
+              ))}
+
+              {(() => {
+                // Organize events into columns to handle overlaps
+                const eventColumns: any[][] = [];
+                timedEvents.forEach((event) => {
+                  const pos = getEventPosition(event);
+                  let placed = false;
+                  for (let col of eventColumns) {
+                    if (
+                      !col.some((e) => {
+                        const ePos = getEventPosition(e);
+                        // Check if current event overlaps with any in this column
+                        return !(
+                          pos.top + pos.height <= ePos.top ||
+                          pos.top >= ePos.top + ePos.height
+                        );
+                      })
+                    ) {
+                      col.push(event);
+                      placed = true;
+                      break;
+                    }
+                  }
+                  if (!placed) eventColumns.push([event]);
+                });
+
+                // Render events with proper width per column
+                return eventColumns.map((col, colIndex) =>
+                  col.map((event, idx) => {
+                    const pos = getEventPosition(event);
+                    const widthPercent = 100 / eventColumns.length; // divide width among overlapping events
+                    return (
+                      <TouchableOpacity
+                        key={idx}
+                        style={[
+                          styles.dayEvent,
+                          {
+                            top: pos.top,
+                            height: pos.height,
+                            left: `${colIndex * widthPercent}%`,
+                            width: `${widthPercent}%`,
+                            backgroundColor: event.color,
+                          },
+                        ]}
+                      >
+                        <Text style={styles.eventTitle} numberOfLines={1}>
+                          {event.title}
+                        </Text>
+                        {event.description && (
+                          <Text
+                            style={styles.eventDescription}
+                            numberOfLines={3}
+                          >
+                            {event.description}
+                          </Text>
+                        )}
+                      </TouchableOpacity>
+                    );
+                  })
+                );
+              })()}
             </View>
+
             {formatDate(currentDate) === formatDate(TODAY) && (
               <View style={[styles.timeTrack, { top: getTimeTrackPosition() }]}>
                 <Text style={styles.timeTrackText}>
@@ -494,10 +673,14 @@ const CalendarApp = () => {
             style={styles.viewButton}
             onPress={() => setShowViewMenu(!showViewMenu)}
           >
-            <Text style={styles.viewButtonText}>
-              {view.charAt(0).toUpperCase() + view.slice(1)} ▼
-            </Text>
+            <View style={styles.viewButtonContent}>
+              <Text style={styles.viewButtonText}>
+                {view.charAt(0).toUpperCase() + view.slice(1)}
+              </Text>
+              <Text style={styles.dropdownIcon}>▼</Text>
+            </View>
           </TouchableOpacity>
+
           {showViewMenu && (
             <View style={styles.viewMenu}>
               {["day", "week", "month"].map((v) => (
@@ -545,7 +728,7 @@ const styles = StyleSheet.create({
   todayButton: {
     paddingHorizontal: 16,
     paddingVertical: 8,
-    borderRadius: 4,
+    borderRadius: 12,
     borderWidth: 1,
     borderColor: "#DDD",
   },
@@ -561,17 +744,32 @@ const styles = StyleSheet.create({
   viewButton: {
     paddingHorizontal: 16,
     paddingVertical: 8,
-    borderRadius: 4,
+    borderRadius: 12,
     borderWidth: 1,
     borderColor: "#DDD",
   },
-  viewButtonText: { fontSize: 14, color: "#333" },
+
+  viewButtonContent: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+
+  viewButtonText: {
+    fontSize: 14,
+    marginRight: 4,
+  },
+
+  dropdownIcon: {
+    fontSize: 10,
+    marginTop: 1,
+  },
+
   viewMenu: {
     position: "absolute",
     top: 40,
     right: 0,
     backgroundColor: "#FFF",
-    borderRadius: 4,
+    borderRadius: 12,
     borderWidth: 1,
     borderColor: "#DDD",
     shadowColor: "#000",
