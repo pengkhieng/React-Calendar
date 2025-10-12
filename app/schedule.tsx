@@ -375,7 +375,7 @@ const ScheduleView: React.FC = () => {
                 style={[
                   styles.monthDayCell,
                   i >= 7 && styles.monthDayCellBorder,
-                ]}
+                ,{ width: (width) / 7 }]}
                 onPress={() => day && setCurrentDate(new Date(day))}
                 disabled={!day}
               >
@@ -956,9 +956,8 @@ const styles = StyleSheet.create({
   },
   weekDayCell: {
     flex: 1,
-    // padding: 8,
     alignItems: "center",
-    backgroundColor: "#FFF",
+    backgroundColor: "#ff9c9cff",
   },
   weekDayText: {
     fontSize: 12,
@@ -966,12 +965,12 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
   monthGrid: {
-    backgroundColor: "orange",
+    backgroundColor: "pink",
     flexDirection: "row",
     flexWrap: "wrap",
   },
   monthDayCell: {
-    width: (width - 20) / 7,
+    // width: (width - 20) / 7,
     height: 60,
     // padding: 4,
     alignItems: "center",
